@@ -1,0 +1,71 @@
+# Correcting the formatting issue in the code content
+
+from datetime import datetime
+
+current_date = datetime.now().strftime("%Y-%m-%d")
+
+updated_code_content = f"""# Keywords and targets for PubMed search
+# Date: {current_date}
+# Coder: Seungpil Jeong
+
+base_keywords = ["omics", "omics", "omics"]
+targets = ["Regression", "SVM", "Clustering", "Correlation",
+           "Random Forest", "Decision Tree", "Naive Bayes", "Gaussian Process", "Markov Process", "AdaBoost",
+           "CNN", "RNN", "GAN", "Autoencoder",
+           "patient similarity network", "disease-gene network", "PPI", "metabolic network", "phenotypic-disease network"]
+filename = "/content/drive/MyDrive/PubMed_" + "_".join(base_keywords) + "_results.csv"
+
+import requests
+import csv
+
+# Set up the base URL and parameters for the E-utilities API
+BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+SEARCH_URL = f"{{BASE_URL}}/esearch.fcgi"
+DB = "pubmed"
+
+# Function to formulate the query based on the given keywords
+def formulate_query(keywords, year=None):
+    query = " AND ".join(f"({{keyword}})" for keyword in keywords)
+    if year:
+        query += f" AND (\"{{year}}\"[Date - Publication])"
+    return query
+
+# Function to get count for a specific year and target
+def get_count_for_year_and_target(year, target):
+    keywords = [target, base_keywords[0], base_keywords[1], base_keywords[2]]
+    query = formulate_query(keywords, year)
+    params = {{
+        "db": DB,
+        "term": query,
+        "retmode": "json"
+    }}
+    response = requests.get(SEARCH_URL, params=params)
+    data = response.json()
+    return int(data["esearchresult"]["count"])
+
+# Create an empty dictionary to store the results for each target and year
+results = {{year: {{}} for year in range(2011, 2024)}}
+
+for target in targets:
+    # Get counts for each year for the current target
+    for year in range(2011, 2024):
+        results[year][target] = get_count_for_year_and_target(year, target)
+
+# Write the results to the CSV file
+with open(filename, 'w', newline='') as csvfile:
+    # Define the CSV header based on the targets
+    csvwriter = csv.writer(csvfile)
+    header = ['Year'] + targets
+    csvwriter.writerow(header)
+    for year in results:
+        row = [year] + [results[year][target] for target in targets]
+        csvwriter.writerow(row)
+
+print(f"Results saved to {{filename}}")
+"""
+
+# Save the updated content to the file
+with open("/mnt/data/multiomics_data_analysis.py", "w") as file:
+    file.write(updated_code_content)
+
+"/mnt/data/multiomics_data_analysis.py"
